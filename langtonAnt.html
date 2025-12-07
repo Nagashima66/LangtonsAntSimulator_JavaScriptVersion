@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ラングトンの蟻</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <style media="screen">
+      .margin-120 {
+        margin-top : 120px;
+      }
+    </style>
+    <script type="text/javascript">
+
+      //変数の定義
+      //ステップ数のカウント
+      let step;
+
+      //フレーム数
+      let frame;
+
+      //空間の座標および（蟻がいるとき）その向き、色が白黒どちらか、の情報を格納する配列。
+      let space = []
+      //※ジャグ配列の詳細は以下
+      //第1階層：X座標
+      //第2階層：Y座標
+      //第3階層：座標のプロパティ
+      //  1つ目の要素：色（0…白、1…黒）
+      //　2つ目の要素：蟻の向き（0…上、1…右、2…下、3…左）
+
+      //空間の大きさ
+      let spaceSizeX;
+      let spaceSizeY;
+
+      //蟻の位置
+      let antPositionX;
+      let antPositionY;
+
+      //蟻のいる場所の情報
+      let antPostionColor;
+      let antDirection;
+
+      //タイマー
+      let timer;
+
+      //キャンバス
+      let canvas;
+
+      //キャンバスのコンテキスト
+      let ctx;
+
+      //ロード後に自動起動
+      onload = initialize;
+
+      function initialize(){
+        //ステップの初期化
+        step = 0;
+
+        //フレーム数の初期化;
+        frame = parseInt(document.getElementById("inputFrame").value);
+
+        //空間の大きさの初期化
+        spaceSizeX = parseInt(document.getElementById("inputSpaceSizeX").value);
+        spaceSizeY = parseInt(document.getElementById("inputSpaceSizeY").value);
+
+        //バリデーションチェック
+        if(frame < 0 || spaceSizeX < 0 || spaceSizeY < 0){
+          alert("ステップ数または空間サイズの初期値が不正です。");
+          return false;
+        }
+
+        //設定後はパラメータを入力不可にする
+        document.getElementById("inputFrame").disabled = true;
+        document.getElementById("inputSpaceSizeX").disabled = true;
+        document.getElementById("inputSpaceSizeY").disabled = true;
+
+        //停止・再開ボタンは入力可能にする。
+        document.getElementById('changeTimerStatus').disabled = false;
+
+
+        //空間の初期化
+        for(let i = 0; i < spaceSizeX; i++){
+          space[i] = []
+          for(let j = 0; j < spaceSizeY; j++){
+            space[i][j] = [0, 0]
+          }
+        }
+
+        //蟻の位置の初期化
+        antPositionX = Math.floor(spaceSizeX / 2);
+        antPositionY = Math.floor(spaceSizeY / 2);
+
+        //キャンバス・キャンバスのコンテキストの設定
+        canvas = document.getElementById("canvas");
+        ctx = canvas.getContext("2d");
+
+        //キャンバスを白塗りしておく。
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+        //タイマーの初期化
+        timer = setInterval(tick, frame);
+
+        return true;
+      }
+
+      //フレームごとに呼ばれる蟻の位置の再計算＆再描画の処理。
+      function tick(){
+        //蟻の位置の再計算
+
+        //再描画の必要がある空間の座標を格納
+        let tempRepaintTargetX = [];
+        let tempRepaintTargetY = [];
+
+        //次は右回りか左回りかの変数（今いる座標の色によって設定）
+        let tempRotationAngle;
+
+        //蟻が現在いる座標の色を反転＆色に応じて向きを変える
+        switch (space[antPositionX][antPositionY][0]) {
+          case 0:
+            //白なら右回り
+            tempRotationAngle = 1;
+            //黒に変更
+            space[antPositionX][antPositionY][0] = 1;
+            //再描画対象に設定
+            tempRepaintTargetX.push(antPositionX);
+            tempRepaintTargetY.push(antPositionY);
+            break;
+          case 1:
+            //黒なら左回り
+            tempRotationAngle = -1 + 4;
+            //白に変更
+            space[antPositionX][antPositionY][0] = 0;
+            //再描画対象に設定
+            tempRepaintTargetX.push(antPositionX);
+            tempRepaintTargetY.push(antPositionY);
+            break;
+
+
+          default:
+            alert('蟻の場所の色が不正エラー。')
+        }
+
+        //蟻が進む向きの計算
+        let nextDirection = (space[antPositionX][antPositionY][1] + tempRotationAngle) % 4;
+
+        //蟻の向きの決定
+        switch (nextDirection) {
+          case 0:
+            antPositionY--;
+            break;
+          case 1:
+            antPositionX++;
+            break;
+          case 2:
+            antPositionY++;
+            break;
+          case 3:
+            antPositionX--;
+            break;
+          default:
+            alert("蟻の向きの決定時にエラーが起きました。");
+        }
+        //領域外に行ってたら逆から出てくる（周期的境界条件）。
+        antPositionY = (antPositionY + spaceSizeY) % spaceSizeY;
+        antPositionX = (antPositionX + spaceSizeX) % spaceSizeX;
+
+        //再描画対象に設定
+        tempRepaintTargetX.push(antPositionX);
+        tempRepaintTargetY.push(antPositionY);
+
+        //蟻の向きの設定。
+        space[antPositionX][antPositionY][1] = nextDirection;
+
+        antPostionColor = space[antPositionX][antPositionY][0]
+        antDirection = space[antPositionX][antPositionY][0]
+
+
+        //再描画
+
+        //各座標のサイズを取得
+        eachSpaceWidth = canvas.width / spaceSizeX;
+        eachSpaceHeight = canvas.height / spaceSizeY;
+
+        //すべての座標について再描画（パフォーマンス悪いので不採用。 ただし、レンダリングの際にすべて上塗りするので見た目はきれいになる。 変な線が残らない）。
+        /*
+        for (let i = 0; i < spaceSizeX; i++) {
+          for (let j = 0; j < spaceSizeY; j++) {
+
+            switch (space[i][j][0]) {
+              //白
+              case 0:
+              ctx.fillStyle = "white";
+              ctx.fillRect(eachSpaceWidth * i, eachSpaceHeight * j, eachSpaceWidth, eachSpaceHeight);
+                break;
+              //黒
+              case 1:
+              ctx.fillStyle = "black";
+              ctx.fillRect(eachSpaceWidth * i, eachSpaceHeight * j, eachSpaceWidth, eachSpaceHeight);
+              break;
+              default:
+                alert("色の描画時エラー");
+            }
+          }
+        }
+        */
+
+        //再描画する必要のある箇所だけ再描画
+        for(let i = 0; i < tempRepaintTargetX.length; i++){
+          tempX = tempRepaintTargetX[i];
+          tempY = tempRepaintTargetY[i];
+          switch (space[tempX][tempY][0]) {
+            //白
+            case 0:
+            ctx.fillStyle = "white";
+            ctx.fillRect(eachSpaceWidth * tempX, eachSpaceHeight * tempY, eachSpaceWidth, eachSpaceHeight);
+              break;
+            //黒
+            case 1:
+            ctx.fillStyle = "black";
+            ctx.fillRect(eachSpaceWidth * tempX, eachSpaceHeight * tempY, eachSpaceWidth, eachSpaceHeight);
+            break;
+            default:
+              alert("色の描画時エラー");
+          }
+        }
+
+        //蟻を描画
+        ctx.fillStyle = "red";
+        ctx.fillRect(eachSpaceWidth * antPositionX + eachSpaceWidth * 0.35 , eachSpaceHeight * antPositionY + eachSpaceHeight * 0.35, eachSpaceWidth * 0.3, eachSpaceHeight * 0.3);
+
+        //ステップ数の更新
+        step++;
+        document.getElementById("showStep").textContent = "step : " + step;
+      }
+
+      //タイマーの停止・再開ボタン用の関数
+      function changeTimerStatus(){
+        changeTimerText = document.getElementById('changeTimerStatus').textContent;
+        switch (changeTimerText) {
+          case "stop":
+            document.getElementById('changeTimerStatus').textContent = "start";
+            clearInterval(timer);
+            break;
+          case "start":
+            document.getElementById('changeTimerStatus').textContent = "stop";
+            timer = setInterval(tick, frame);
+            break;
+          default:
+        }
+      }
+
+      //状態の初期化ボタン用の関数
+      function resetTimerStatus(){
+        resetTimerText = document.getElementById('resetTimerStatus').textContent;
+        switch (resetTimerText) {
+          case "reset":
+            document.getElementById('resetTimerStatus').textContent = "restart";
+            document.getElementById('changeTimerStatus').textContent = "stop";
+            document.getElementById('changeTimerStatus').disabled = true;
+            clearInterval(timer);
+            document.getElementById("inputFrame").disabled = false;
+            document.getElementById("inputSpaceSizeX").disabled = false;
+            document.getElementById("inputSpaceSizeY").disabled = false;
+            break;
+          case "restart":
+            document.getElementById('resetTimerStatus').textContent = "reset";
+            clearInterval(timer);
+            initialize();
+            break;
+          default:
+        }
+      }
+
+    </script>
+  </head>
+  <body>
+    <h1 class="display-3 bg-success p-3 fixed-top">ラングトンの蟻</h1>
+    <div class="container margin-120 p-3">
+      <div class="row">
+        <div class="col-md-6">
+          <p>
+            ラングトンの蟻とは、ある簡単な規則に基づいて碁盤の目状をアリがマスを塗りながら進んでいくというシミュレーションです。<br>
+            詳細についてはWikipediaを参照してください。
+          </p>
+          <p>
+            ルールのシンプルさの割に複雑な動きをするのですが、一定の時間がたつとあるパターンを繰り返すようになったり、初期値によって大きく動きが変わったりと面白いです。
+          </p>
+          <p>
+            プログラミングの勉強として作ってみることにしました。
+          </p>
+        </div>
+        <div class="col-md-6">
+          <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgwxvM_aIpjK3_mpD_lxiahZMC5JpvE_3V6eqHzD8ssvidrQyVKz8bkd9Mz9NuvXYgqfIhCbK45oeBQpVBgIbcVCSjafkwy6BuRS4HlGwB9ktDZ8pMHtGXEqkifdz0kTeX5Wa6ulyP8yVj5/s400/mushi_ari.png" alt="" class="img-fluid">
+        </div>
+      </div>
+    </div>
+    <div class="container w-75">
+      <div class="d-flex flex-column flex-md-row justify-content-around">
+        <div class="d-flex flex-column">
+          <label for="inputSpaceSizeX">空間のX方向の長さ</label>
+          <input type="number" name="" value="100" id="inputSpaceSizeX" class="">
+        </div>
+        <div class="d-flex flex-column">
+          <label for="inputSpaceSizeY">空間のY方向の長さ</label>
+          <input type="number" name="" value="100" id="inputSpaceSizeY" class="">
+        </div>
+        <div class="d-flex flex-column">
+          <label for="inputFrame">フレームの単位（ミリ秒）</label>
+          <input type="number" name="" value="1" id="inputFrame" class="">
+        </div>
+      </div>
+      <div class="container">
+        <div class="d-flex justify-content-center">
+          <p class="m-4">
+            <spanid id = "showStep">step : </span>
+          </p>
+          <div class="">
+            <button type="button" name="button" id="resetTimerStatus" class="m-4" onclick="resetTimerStatus()">reset</button>
+          </div>
+          <div class="">
+            <button type="button" name="button" id="changeTimerStatus" class="m-4" onclick="changeTimerStatus()">stop</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container-flex d-flex justify-content-center">
+      <canvas id="canvas" class="border border-primary m-3 w-75 h-75"></canvas>
+    </div>
+    <footer class="py-3 bg-dark text-light">
+       <p class="text-center">Created by Nagashima66</p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+  </body>
+</html>
