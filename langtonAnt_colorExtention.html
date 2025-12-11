@@ -26,7 +26,7 @@
       //第1階層：X座標
       //第2階層：Y座標
       //第3階層：座標のプロパティ
-      //  1つ目の要素：色（0…白、1…赤、2…青、3…緑）
+      //  1つ目の要素：色（0…白、1…赤、2…緑、3…青）
       //　2つ目の要素：蟻の向き（0…上、1…右、2…下、3…左）
 
       //空間の大きさ
@@ -129,9 +129,9 @@
             break;
 
           case 1:
-            //赤なら左回り
-            tempRotationAngle = -1 + 4;
-            //青に変更
+            //赤なら右回り
+            tempRotationAngle = 1;
+            //緑に変更
             space[antPositionX][antPositionY][0] = 2;
             //再描画対象に設定
             tempRepaintTargetX.push(antPositionX);
@@ -139,9 +139,9 @@
             break;
 
           case 2:
-            //青なら右回り
-            tempRotationAngle = 1;
-            //緑に変更
+            //緑なら左回り
+            tempRotationAngle = 3;
+            //青に変更
             space[antPositionX][antPositionY][0] = 3;
             //再描画対象に設定
             tempRepaintTargetX.push(antPositionX);
@@ -149,15 +149,14 @@
             break;
 
           case 3:
-            //緑なら左回り
-            tempRotationAngle = -1 + 4;
+            //青なら左回り
+            tempRotationAngle = 3;
             //白に変更
             space[antPositionX][antPositionY][0] = 0;
             //再描画対象に設定
             tempRepaintTargetX.push(antPositionX);
             tempRepaintTargetY.push(antPositionY);
             break;
-
 
           default:
             alert('蟻の場所の色が不正エラー。')
@@ -237,18 +236,29 @@
             ctx.fillStyle = "white";
             ctx.fillRect(eachSpaceWidth * tempX, eachSpaceHeight * tempY, eachSpaceWidth, eachSpaceHeight);
               break;
-            //黒
+            //赤
             case 1:
-            ctx.fillStyle = "black";
+            ctx.fillStyle = "red";
             ctx.fillRect(eachSpaceWidth * tempX, eachSpaceHeight * tempY, eachSpaceWidth, eachSpaceHeight);
             break;
+            //緑
+            case 2:
+            ctx.fillStyle = "green";
+            ctx.fillRect(eachSpaceWidth * tempX, eachSpaceHeight * tempY, eachSpaceWidth, eachSpaceHeight);
+            break;
+            //青
+            case 3:
+            ctx.fillStyle = "blue";
+            ctx.fillRect(eachSpaceWidth * tempX, eachSpaceHeight * tempY, eachSpaceWidth, eachSpaceHeight);
+            break;
+
             default:
               alert("色の描画時エラー");
           }
         }
 
         //蟻を描画
-        ctx.fillStyle = "red";
+        ctx.fillStyle = "purple";
         ctx.fillRect(eachSpaceWidth * antPositionX + eachSpaceWidth * 0.35 , eachSpaceHeight * antPositionY + eachSpaceHeight * 0.35, eachSpaceWidth * 0.3, eachSpaceHeight * 0.3);
 
         //ステップ数の更新
