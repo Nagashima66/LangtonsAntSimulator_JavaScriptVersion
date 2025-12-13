@@ -25,20 +25,26 @@
       //第1階層：X座標
       //第2階層：Y座標
       //第3階層：座標のプロパティ
-      //  1つ目の要素：色（0…白、1…黒）
+      //  1つ目の要素：色（0…白、1…赤、2…緑、3…青）
       //　2つ目の要素：蟻の向き（0…上、1…右、2…下、3…左）
 
       //空間の大きさ
       let spaceSizeX;
       let spaceSizeY;
 
-      //蟻の位置
-      let antPositionX;
-      let antPositionY;
+      let eachSpaceWidth;
+      let eachSpaceHeight;
+
+      //蟻の数
+      let antNumber;
+
+      //蟻の位置（の配列）
+      let antPositionX = [];
+      let antPositionY = [];
 
       //蟻のいる場所の情報
-      let antPostionColor;
-      let antDirection;
+      let antPositionColor = [];
+      let antDirection = [];
 
       //タイマー
       let timer;
@@ -48,6 +54,11 @@
 
       //キャンバスのコンテキスト
       let ctx;
+
+      //再描画対象の座標を格納する配列
+      let repaintTargetX = [];
+      let repaintTargetY = [];
+
 
       //ロード後に自動起動
       onload = initialize;
@@ -69,27 +80,6 @@
           return false;
         }
 
-        //設定後はパラメータを入力不可にする
-        document.getElementById("inputFrame").disabled = true;
-        document.getElementById("inputSpaceSizeX").disabled = true;
-        document.getElementById("inputSpaceSizeY").disabled = true;
-
-        //停止・再開ボタンは入力可能にする。
-        document.getElementById('changeTimerStatus').disabled = false;
-
-
-        //空間の初期化
-        for(let i = 0; i < spaceSizeX; i++){
-          space[i] = []
-          for(let j = 0; j < spaceSizeY; j++){
-            space[i][j] = [0, 0]
-          }
-        }
-
-        //蟻の位置の初期化
-        antPositionX = Math.floor(spaceSizeX / 2);
-        antPositionY = Math.floor(spaceSizeY / 2);
-
         //キャンバス・キャンバスのコンテキストの設定
         canvas = document.getElementById("canvas");
         ctx = canvas.getContext("2d");
@@ -97,6 +87,54 @@
         //キャンバスを白塗りしておく。
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+
+        //設定後はパラメータを入力不可にする
+        document.getElementById("inputFrame").disabled = true;
+        document.getElementById("inputSpaceSizeX").disabled = true;
+        document.getElementById("inputSpaceSizeY").disabled = true;
+        document.getElementById("randomLevel").disabled = true;
+
+        //停止・再開ボタンは入力可能にする。
+        document.getElementById('changeTimerStatus').disabled = false;
+
+        //乱雑レベルの読み込み
+        let randomLevel = Number(document.getElementById("randomLevel").value);
+
+        //空間の初期化
+
+        repaintTargetX = [];
+        repaintTargetY = [];
+
+        for(let i = 0; i < spaceSizeX; i++){
+          space[i] = []
+          for(let j = 0; j < spaceSizeY; j++){
+            //乱数を生成し、乱雑レベル以下だったら色を変える。 色の種類（4色）は適当。
+            let random = Math.random() * 100;
+            if(random < randomLevel){
+              space[i][j] = [Math.floor(random * 100) % 4 ,0];
+            } else{
+                space[i][j] = [0, 0];
+            }
+            repaintTargetX.push(i);
+            repaintTargetY.push(j);
+          }
+        }
+
+        //蟻の位置の初期化
+        antNumber = 3
+
+        for(let i = 0; i < antNumber; i++){
+          antPositionX[i] = Math.floor(spaceSizeX / 4 * (i + 1));
+          antPositionY[i] = Math.floor(spaceSizeY / 4 * (i + 1));
+
+          antDirection[i] = 0;
+          antPositionColor[i] = 0;
+        }
+
+        //初期描画
+        repaint()
+
 
         //タイマーの初期化
         timer = setInterval(tick, frame);
@@ -108,79 +146,118 @@
       function tick(){
         //蟻の位置の再計算
 
+        repaintTargetX = [];
+        repaintTargetY = [];
+        for(let i = 0; i < antNumber; i++){
+          antPositionCalculate(i);
+        }
+
+        //再描画（初期化時にも使うので関数として切り出し）
+        repaint();
+
+        //ステップ数の更新
+        step++;
+        document.getElementById("showStep").textContent = "step : " + step;
+      }
+
+      
+      function antPositionCalculate(antIndex){
         //再描画の必要がある空間の座標を格納
-        let tempRepaintTargetX = [];
-        let tempRepaintTargetY = [];
 
         //次は右回りか左回りかの変数（今いる座標の色によって設定）
         let tempRotationAngle;
 
         //蟻が現在いる座標の色を反転＆色に応じて向きを変える
-        switch (space[antPositionX][antPositionY][0]) {
+        switch (space[antPositionX[antIndex]][antPositionY[antIndex]][0]) {
           case 0:
             //白なら右回り
             tempRotationAngle = 1;
-            //黒に変更
-            space[antPositionX][antPositionY][0] = 1;
+            //赤に変更
+            space[antPositionX[antIndex]][antPositionY[antIndex]][0] = 1;
             //再描画対象に設定
-            tempRepaintTargetX.push(antPositionX);
-            tempRepaintTargetY.push(antPositionY);
-            break;
-          case 1:
-            //黒なら左回り
-            tempRotationAngle = -1 + 4;
-            //白に変更
-            space[antPositionX][antPositionY][0] = 0;
-            //再描画対象に設定
-            tempRepaintTargetX.push(antPositionX);
-            tempRepaintTargetY.push(antPositionY);
+            repaintTargetX.push(antPositionX[antIndex]);
+            repaintTargetY.push(antPositionY[antIndex]);
             break;
 
+          case 1:
+            //赤なら左回り
+            tempRotationAngle = 3;
+            //緑に変更
+            space[antPositionX[antIndex]][antPositionY[antIndex]][0] = 2;
+            //再描画対象に設定
+            repaintTargetX.push(antPositionX[antIndex]);
+            repaintTargetY.push(antPositionY[antIndex]);
+            break;
+
+          case 2:
+            //緑なら右回り
+            tempRotationAngle = 1;
+            //青に変更
+            space[antPositionX[antIndex]][antPositionY[antIndex]][0] = 3;
+            //再描画対象に設定
+            repaintTargetX.push(antPositionX[antIndex]);
+            repaintTargetY.push(antPositionY[antIndex]);
+            break;
+
+          case 3:
+            //青なら左回り
+            tempRotationAngle = 3;
+            //白に変更
+            space[antPositionX[antIndex]][antPositionY[antIndex]][0] = 0;
+            //再描画対象に設定
+            repaintTargetX.push(antPositionX[antIndex]);
+            repaintTargetY.push(antPositionY[antIndex]);
+            break;
 
           default:
             alert('蟻の場所の色が不正エラー。')
         }
 
         //蟻が進む向きの計算
-        let nextDirection = (space[antPositionX][antPositionY][1] + tempRotationAngle) % 4;
+        let nextDirection = (space[antPositionX[antIndex]][antPositionY[antIndex]][1] + tempRotationAngle) % 4;
 
         //蟻の向きの決定
         switch (nextDirection) {
           case 0:
-            antPositionY--;
+            antPositionY[antIndex]--;
             break;
           case 1:
-            antPositionX++;
+            antPositionX[antIndex]++;
             break;
           case 2:
-            antPositionY++;
+            antPositionY[antIndex]++;
             break;
           case 3:
-            antPositionX--;
+            antPositionX[antIndex]--;
             break;
           default:
             alert("蟻の向きの決定時にエラーが起きました。");
         }
         //領域外に行ってたら逆から出てくる（周期的境界条件）。
-        antPositionY = (antPositionY + spaceSizeY) % spaceSizeY;
-        antPositionX = (antPositionX + spaceSizeX) % spaceSizeX;
+        antPositionY[antIndex] = (antPositionY[antIndex] + spaceSizeY) % spaceSizeY;
+        antPositionX[antIndex] = (antPositionX[antIndex] + spaceSizeX) % spaceSizeX;
 
         //再描画対象に設定
-        tempRepaintTargetX.push(antPositionX);
-        tempRepaintTargetY.push(antPositionY);
+        repaintTargetX.push(antPositionX[antIndex]);
+        repaintTargetY.push(antPositionY[antIndex]);
 
         //蟻の向きの設定。
-        space[antPositionX][antPositionY][1] = nextDirection;
+        space[antPositionX[antIndex]][antPositionY[antIndex]][1] = nextDirection;
 
-        antPostionColor = space[antPositionX][antPositionY][0]
-        antDirection = space[antPositionX][antPositionY][0]
+        antPositionColor[antIndex] = space[antPositionX[antIndex]][antPositionY[antIndex]][0]
+        antDirection[antIndex] = space[antPositionX[antIndex]][antPositionY[antIndex]][0]
 
+        return true;
+      }
+
+      function repaint(){
 
         //再描画
 
         //各座標のサイズを取得
         eachSpaceWidth = canvas.width / spaceSizeX;
         eachSpaceHeight = canvas.height / spaceSizeY;
+
 
         //すべての座標について再描画（パフォーマンス悪いので不採用。 ただし、レンダリングの際にすべて上塗りするので見た目はきれいになる。 変な線が残らない）。
         /*
@@ -206,32 +283,45 @@
         */
 
         //再描画する必要のある箇所だけ再描画
-        for(let i = 0; i < tempRepaintTargetX.length; i++){
-          tempX = tempRepaintTargetX[i];
-          tempY = tempRepaintTargetY[i];
+        for(let i = 0; i < repaintTargetX.length; i++){
+          tempX = repaintTargetX[i];
+          tempY = repaintTargetY[i];
           switch (space[tempX][tempY][0]) {
             //白
             case 0:
             ctx.fillStyle = "white";
             ctx.fillRect(eachSpaceWidth * tempX, eachSpaceHeight * tempY, eachSpaceWidth, eachSpaceHeight);
               break;
-            //黒
+            //赤
             case 1:
-            ctx.fillStyle = "black";
+            ctx.fillStyle = "red";
             ctx.fillRect(eachSpaceWidth * tempX, eachSpaceHeight * tempY, eachSpaceWidth, eachSpaceHeight);
             break;
+            //緑
+            case 2:
+            ctx.fillStyle = "green";
+            ctx.fillRect(eachSpaceWidth * tempX, eachSpaceHeight * tempY, eachSpaceWidth, eachSpaceHeight);
+            break;
+            //青
+            case 3:
+            ctx.fillStyle = "blue";
+            ctx.fillRect(eachSpaceWidth * tempX, eachSpaceHeight * tempY, eachSpaceWidth, eachSpaceHeight);
+            break;
+
             default:
               alert("色の描画時エラー");
           }
         }
 
         //蟻を描画
-        ctx.fillStyle = "red";
-        ctx.fillRect(eachSpaceWidth * antPositionX + eachSpaceWidth * 0.35 , eachSpaceHeight * antPositionY + eachSpaceHeight * 0.35, eachSpaceWidth * 0.3, eachSpaceHeight * 0.3);
 
-        //ステップ数の更新
-        step++;
-        document.getElementById("showStep").textContent = "step : " + step;
+        ctx.fillStyle = "purple";
+
+        for(let i = 0; i < antNumber; i++){
+          ctx.fillRect(eachSpaceWidth * antPositionX[i] + eachSpaceWidth * 0.35 , eachSpaceHeight * antPositionY[i] + eachSpaceHeight * 0.35, eachSpaceWidth * 0.3, eachSpaceHeight * 0.3);
+        }
+        return true;
+
       }
 
       //タイマーの停止・再開ボタン用の関数
@@ -262,6 +352,8 @@
             document.getElementById("inputFrame").disabled = false;
             document.getElementById("inputSpaceSizeX").disabled = false;
             document.getElementById("inputSpaceSizeY").disabled = false;
+            document.getElementById("randomLevel").disabled = false;
+
             break;
           case "restart":
             document.getElementById('resetTimerStatus').textContent = "reset";
@@ -299,15 +391,19 @@
       <div class="d-flex flex-column flex-md-row justify-content-around">
         <div class="d-flex flex-column">
           <label for="inputSpaceSizeX">空間のX方向の長さ</label>
-          <input type="number" name="" value="150" id="inputSpaceSizeX" class="">
+          <input type="number" name="" value="150" id="inputSpaceSizeX" class="" min="1">
         </div>
         <div class="d-flex flex-column">
           <label for="inputSpaceSizeY">空間のY方向の長さ</label>
-          <input type="number" name="" value="75" id="inputSpaceSizeY" class="">
+          <input type="number" name="" value="75" id="inputSpaceSizeY" class="" min="1">
         </div>
         <div class="d-flex flex-column">
           <label for="inputFrame">フレームの単位（ミリ秒）</label>
-          <input type="number" name="" value="1" id="inputFrame" class="">
+          <input type="number" name="" value="4" id="inputFrame" class="" min="4">
+        </div>
+        <div class="d-flex flex-column">
+          <label for="randomLevel">ランダム度（%）</label>
+          <input type="number" name="" value="0" id="randomLevel" class="" step="0.001" min="0" max="100">
         </div>
       </div>
       <div class="container">
