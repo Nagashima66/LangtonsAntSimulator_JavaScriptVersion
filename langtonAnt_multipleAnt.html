@@ -94,6 +94,7 @@
         document.getElementById("inputSpaceSizeX").disabled = true;
         document.getElementById("inputSpaceSizeY").disabled = true;
         document.getElementById("randomLevel").disabled = true;
+        document.getElementById("antNumber").disabled = true;
 
         //停止・再開ボタンは入力可能にする。
         document.getElementById('changeTimerStatus').disabled = false;
@@ -122,11 +123,12 @@
         }
 
         //蟻の位置の初期化
-        antNumber = 3
+        antNumber = document.getElementById("antNumber").value;
 
         for(let i = 0; i < antNumber; i++){
-          antPositionX[i] = Math.floor(spaceSizeX / 4 * (i + 1));
-          antPositionY[i] = Math.floor(spaceSizeY / 4 * (i + 1));
+          antPositionX[i] = Number(document.getElementById("antPositionInputX" + i).value) % spaceSizeX;
+          antPositionY[i] = Number(document.getElementById("antPositionInputY" + i).value) % spaceSizeY;
+          
 
           antDirection[i] = 0;
           antPositionColor[i] = 0;
@@ -353,6 +355,7 @@
             document.getElementById("inputSpaceSizeX").disabled = false;
             document.getElementById("inputSpaceSizeY").disabled = false;
             document.getElementById("randomLevel").disabled = false;
+            document.getElementById("antNumber").disabled = false;
 
             break;
           case "restart":
@@ -363,6 +366,78 @@
           default:
         }
       }
+
+    function setupEachAntPosition(){
+      //変更されたantNumberを取得。
+      let antNumber = document.getElementById("antNumber").value;
+
+      //削除前に入力されている値を取っておく
+      let tempAntPreviousInitialPositionsX = [];
+      let tempAntPreviousInitialPositionsY = [];
+
+      document.querySelectorAll(".antPositionInputX").forEach((d) => {
+        tempAntPreviousInitialPositionsX.push(d.value)
+      });
+
+      document.querySelectorAll(".antPositionInputY").forEach((d) => {
+        tempAntPreviousInitialPositionsY.push(d.value)
+      });
+
+      //既に追加されている蟻の位置の入力を受け付けるinput要素をすべて削除する。
+      let antPositionDOMs = document.querySelectorAll(".antPositionDOMs");
+
+      antPositionDOMs.forEach((d) => {
+        
+        d.remove();
+      });
+
+      //input要素を追加しなおす。
+      //追加先の親要素を取得。
+      let antPostionDomsContainer = document.getElementById("antPostionDomsContainer");
+      
+      for(let i = 0; i < antNumber; i++){
+        //divを追加
+        tempAntPositionDiv = document.createElement("div");
+        tempAntPositionDiv.value = 0;
+        tempAntPositionDiv.className = "antPositionDOMs m-4 d-flex flex-column flex-md-row justify-content-around";
+
+        //labelとinput（X）
+        tempAntPositionLabelX = document.createElement("label");
+        tempAntPositionLabelX.htmlFor = "antPositionInputX" + i;
+        tempAntPositionLabelX.textContent = "蟻" + (i + 1) + " のX座標";
+        tempAntPositionInputX = document.createElement("input");
+        tempAntPositionInputX.type = "number";
+        tempAntPositionInputX.className = "antPositionInputX";
+        tempAntPositionInputX.id = "antPositionInputX" + i;
+        tempAntPositionInputX.min = 1;
+        
+        //labelとinput（Y）
+        tempAntPositionLabelY = document.createElement("label");
+        tempAntPositionLabelY.htmlFor = "antPositionInputY" + i;
+        tempAntPositionLabelY.textContent = "蟻" + (i + 1) + " のY座標"
+        tempAntPositionInputY = document.createElement("input");
+        tempAntPositionInputY.type = "number";
+        tempAntPositionInputY.className = "antPositionInputY";
+        tempAntPositionInputY.id = "antPositionInputY" + i;
+        tempAntPositionInputY.min = 1;
+
+        //以前の値を設定。
+        if(i < tempAntPreviousInitialPositionsX.length){
+          tempAntPositionInputX.value = tempAntPreviousInitialPositionsX[i];
+          tempAntPositionInputY.value = tempAntPreviousInitialPositionsY[i];
+        }
+
+        //div要素にinputとラベルを追加
+        tempAntPositionDiv.appendChild(tempAntPositionLabelX);
+        tempAntPositionDiv.appendChild(tempAntPositionInputX);
+        tempAntPositionDiv.appendChild(tempAntPositionLabelY);
+        tempAntPositionDiv.appendChild(tempAntPositionInputY);
+
+        //div要素を親要素に追加。
+        antPostionDomsContainer.appendChild(tempAntPositionDiv);
+      }
+    
+    }
 
     </script>
   </head>
@@ -387,8 +462,9 @@
         </div>
       </div>
     </div>
+    <p class="text-center">空間・時間の設定</p>
     <div class="container w-75">
-      <div class="d-flex flex-column flex-md-row justify-content-around">
+      <div class="d-flex flex-column flex-lg-row justify-content-around">
         <div class="d-flex flex-column">
           <label for="inputSpaceSizeX">空間のX方向の長さ</label>
           <input type="number" name="" value="150" id="inputSpaceSizeX" class="" min="1">
@@ -406,6 +482,25 @@
           <input type="number" name="" value="0" id="randomLevel" class="" step="0.001" min="0" max="100">
         </div>
       </div>
+    </div>
+    <p class="text-center m-4">蟻の初期配置の設定</p>
+    <div class="container w-75">
+      <div class="d-flex flex-column flex-md-row justify-content-around">
+        <div class="d-flex flex-column">
+          <label for="antNumber">蟻の数</label>
+          <input type="number" name="" value="1" id="antNumber" class="" step="1" min="1" max="8" onchange="setupEachAntPosition()">
+        </div>
+      </div>
+      <div class="container">
+        <div class="row justify-content-around" id="antPostionDomsContainer">
+          <div class="antPositionDOMs m-4 d-flex flex-column flex-md-row justify-content-around">
+            <label for="antPositionInputX0">蟻1 のX座標</label><input type="number" id="antPositionInputX0" min="1" value="75" disabled="true" class="antPositionInputX">
+            <label for="antPositionInputY0">蟻1 のY座標</label><input type="number" id="antPositionInputY0" min="1" value="37" disabled="true"  class="antPositionInputY">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
       <div class="container">
         <div class="d-flex justify-content-center">
           <p class="m-4">
