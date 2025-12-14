@@ -515,9 +515,9 @@
         tempAntTurnPatternOption3 =  document.createElement("option");
         tempAntTurnPatternOption3.value = "RRRL";
         tempAntTurnPatternOption3.textContent = "RRRL";
-        tempAntTurnPatternOption3 =  document.createElement("option");
-        tempAntTurnPatternOption3.value = "RRLL";
-        tempAntTurnPatternOption3.textContent = "RRLL";
+        tempAntTurnPatternOption4 =  document.createElement("option");
+        tempAntTurnPatternOption4.value = "RRLL";
+        tempAntTurnPatternOption4.textContent = "RRLL";
         tempAntTurnPatternSelect.appendChild(tempAntTurnPatternOption1);
         tempAntTurnPatternSelect.appendChild(tempAntTurnPatternOption2);
         tempAntTurnPatternSelect.appendChild(tempAntTurnPatternOption3);
@@ -572,7 +572,7 @@
             <br>
             蟻が移動する際に蟻は右に90°あるいは左に90°方向転換します。 
             <br>
-            蟻ごとにパターンを設定可能で、"RLRL"・"RLLR"・"RRRL"から選択可能です。
+            蟻ごとにパターンを設定可能で、"RLRL"・"RLLR"・"RRRL", "RRLL"から選択可能です。
             <br>
             ※パターンの例："RLRL"の場合、
             <ul>
@@ -640,9 +640,9 @@
             <label for="antPositionInputY0">蟻1 の方向転換パターン</label>
             <select id="antTurnPattern0" disabled="true"  class="antTurnPattern">
               <option value="RLRL" selected="selected">RLRL</option>
-              <option value="RLLR" selected="selected">RLLR</option>
-              <option value="RRRL" selected="selected">RRRL</option>
-              <option value="RRLL" selected="selected">RRLL</option>
+              <option value="RLLR">RLLR</option>
+              <option value="RRRL">RRRL</option>
+              <option value="RRLL">RRLL</option>
             </select>
           </div>
         </div>
