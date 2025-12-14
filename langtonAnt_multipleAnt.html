@@ -95,6 +95,13 @@
         document.getElementById("inputSpaceSizeY").disabled = true;
         document.getElementById("randomLevel").disabled = true;
         document.getElementById("antNumber").disabled = true;
+        document.querySelectorAll(".antPositionInputX").forEach(
+          (d) => {d.disabled = true}
+        );
+        document.querySelectorAll(".antPositionInputY").forEach(
+          (d) => {d.disabled = true}
+        );
+
 
         //停止・再開ボタンは入力可能にする。
         document.getElementById('changeTimerStatus').disabled = false;
@@ -132,6 +139,11 @@
 
           antDirection[i] = 0;
           antPositionColor[i] = 0;
+
+          if(antPositionX[i] > spaceSizeX || antPositionX[i] < 1 || antPositionY[i] > spaceSizeX || antPositionY[i] < 1){
+            alert("蟻の位置が不正です。");
+            return false;
+          }
         }
 
         //初期描画
@@ -356,6 +368,12 @@
             document.getElementById("inputSpaceSizeY").disabled = false;
             document.getElementById("randomLevel").disabled = false;
             document.getElementById("antNumber").disabled = false;
+            document.querySelectorAll(".antPositionInputX").forEach(
+              (d) => {d.disabled = false}
+            );
+            document.querySelectorAll(".antPositionInputY").forEach(
+              (d) => {d.disabled = false}
+            );
 
             break;
           case "restart":
